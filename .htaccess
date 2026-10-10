@@ -1,0 +1,116 @@
+# =============================================================================
+#  Tienda Digital "Tecnology"
+#
+#  Este archivo bloquea por HTTP los scripts de mantenimiento, diagnostico e
+#  instalacion que viven en la raiz del proyecto. NO son parte de la aplicacion
+#  y ninguno es necesario para que la tienda funcione.
+#
+#  Que queda accesible normalmente: index.html, assets/, api/, admin/, auth/,
+#  customer/ e includes/.
+#
+#  IMPORTANTE - reinstalacion:
+#  setup.php y admin_setup.php quedan bloqueados aqui. Para usarlos hay que
+#  renombrar temporalmente este archivo a .htaccess.bak:
+#      ren .htaccess .htaccess.bak
+#  y restaurarlo despues. Tambien se pueden ejecutar por linea de comandos:
+#      php setup.php
+#  (verificar antes que las credenciales de includes/db.php sean correctas)
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+#  DESTRUCTIVOS Y DE MANTENIMIENTO - maxima prioridad
+#
+#  Se prueban por HTTP sin autenticacion. Comprobado en produccion: la regla
+#  de abajo faltaba y abrir http://localhost/tienda/reset_all.php fue suficiente
+#  para ejecutar DROP TABLE sobre 18 tablas. No volver a dejar scripts de este
+#  tipo en la raiz, y noprobe URLs desconocidas sobre HTTP.
+# -----------------------------------------------------------------------------
+<FilesMatch "^(reset_all|show_tablas|show_compras|recreate_compras|recreate_compras2|debug_fk|fix_admin_tables|check_admin|count_admin)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# -----------------------------------------------------------------------------
+#  Scripts de diagnostico
+# -----------------------------------------------------------------------------
+<FilesMatch "^(check_db|check_system|check_columns|test_insert)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# -----------------------------------------------------------------------------
+#  Scripts de migracion de esquema
+#  (schema.php ya aplica estas migraciones solo al entrar al panel)
+# -----------------------------------------------------------------------------
+<FilesMatch "^(actualizar_bd_directo|update_database_schema|update_pagos_schema|update_favoritos_schema|update_abastecimientos_schema|update_comprobante_schema|migracion_pagos_completa)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# -----------------------------------------------------------------------------
+#  Instaladores: crean el esquema y las cuentas de administrador.
+#  Peligrosos si quedan publics despues de instalar.
+# -----------------------------------------------------------------------------
+<FilesMatch "^(setup|admin_setup)\.php$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# -----------------------------------------------------------------------------
+#  Logs: no exponerlos por HTTP (pueden detallar errores de negocio)
+# -----------------------------------------------------------------------------
+<FilesMatch "\.(log|txt|bak|old|sql)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# -----------------------------------------------------------------------------
+#  Archivos auxiliares con prefijo _ o .
+#
+#  REGLA PREVENTIVA, la mas importante de este archivo. Los script temporales
+#  de trabajo (_tmp_*.php, _check*.php, ...) NO aparecen en las listas de
+#  arriba, asi que mientras viven en la raiz quedan EJECUTABLES por cualquier
+#  visitante. Uno de ellos llego a borrar devoluciones de la base de datos solo
+#  con que se abriera la URL. No dejar nunca scripts de trabajo en la raiz web:
+#  o se borran al terminar, o se escriben fuera del directorio publicado
+#  (por ejemplo C:\Users\<usuario>\AppData\Local\Temp\).
+# -----------------------------------------------------------------------------
+<FilesMatch "^[_.]">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order deny,allow
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# -----------------------------------------------------------------------------
+#  Evitar listado de directorios
+# -----------------------------------------------------------------------------
+Options -Indexes

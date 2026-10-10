@@ -1,0 +1,18 @@
+# =============================================================================
+#  scratch/ - Scripts de mantenimiento y diagnostico
+#
+#  Esta carpeta NO es parte de la aplicacion y no debe ser accesible por HTTP.
+#  Bloqueo total: ni siquiera se pueden listar los archivos.
+# =============================================================================
+
+<IfModule mod_authz_core.c>
+    Require all denied
+</IfModule>
+
+# Fallback para servidores sin mod_authz_core (Apache 2.2)
+<IfModule !mod_authz_core.c>
+    Order deny,allow
+    Deny from all
+</IfModule>
+
+Options -Indexes -ExecCGI

@@ -1,0 +1,156 @@
+        <!-- Sección Devoluciones a Proveedores -->
+        <div id="admin-seccion-devoluciones-proveedor" class="admin-panel-content hidden">
+            <div class="admin-card" style="margin-bottom: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; margin-bottom: 20px;">
+                    <div>
+                        <h2 style="margin:0; font-size:1.5rem; display:flex; align-items:center; gap:8px;">
+                            ↩️ Devoluciones a Proveedores
+                        </h2>
+                        <p style="margin:4px 0 0 0; color:var(--text-muted, #666); font-size:0.9rem;">
+                            Registra devoluciones de mercancía recibida de proveedores. Al devolver, se resta del stock
+                            y queda registrada para trazabilidad. Se puede anular reingresando la mercancía al inventario.
+                        </p>
+                    </div>
+                    <div>
+                        <button type="button" onclick="abrirModalRegistrarDevolucionProveedor()" style="padding:12px 20px; background:#8e44ad; color:white; border:none; border-radius:10px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:8px; box-shadow:0 4px 14px rgba(142,68,173,0.3);">
+                            ↩️ Registrar Devolución a Proveedor
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Tarjetas KPI -->
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:15px; margin-bottom:25px;">
+                    <div style="background:#fff; border:1px solid #f3e8ff; border-left:5px solid #9333ea; padding:16px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                        <div style="font-size:0.85rem; color:#6b7280; font-weight:600; text-transform:uppercase;">💸 Total Devuelto (USD)</div>
+                        <div id="devProvStatTotalUSD" style="font-size:1.6rem; font-weight:800; color:#7e22ce; margin-top:4px;">$0.00</div>
+                    </div>
+                    <div style="background:#fff; border:1px solid #fee2e2; border-left:5px solid #ef4444; padding:16px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                        <div style="font-size:0.85rem; color:#6b7280; font-weight:600; text-transform:uppercase;">💵 Efectivo</div>
+                        <div id="devProvStatEfectivoUSD" style="font-size:1.6rem; font-weight:800; color:#dc2626; margin-top:4px;">$0.00</div>
+                    </div>
+                    <div style="background:#fff; border:1px solid #dbeafe; border-left:5px solid #2563eb; padding:16px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                        <div style="font-size:0.85rem; color:#6b7280; font-weight:600; text-transform:uppercase;">🎫 Nota de Crédito</div>
+                        <div id="devProvStatNCUSD" style="font-size:1.6rem; font-weight:800; color:#2563eb; margin-top:4px;">$0.00</div>
+                    </div>
+                    <div style="background:#fff; border:1px solid #e0e7ff; border-left:5px solid #6366f1; padding:16px; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.04);">
+                        <div style="font-size:0.85rem; color:#6b7280; font-weight:600; text-transform:uppercase;">📋 Activas</div>
+                        <div id="devProvStatActivas" style="font-size:1.6rem; font-weight:800; color:#4f46e5; margin-top:4px;">0</div>
+                    </div>
+                </div>
+
+                <!-- Tabla -->
+                <div class="table-responsive">
+                    <table class="inventory-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Compra</th>
+                                <th>Proveedor</th>
+                                <th>Mercancía Devuelta</th>
+                                <th>Tipo</th>
+                                <th>Monto (USD)</th>
+                                <th>Método</th>
+                                <th>Motivo</th>
+                                <th>Registrado Por</th>
+                                <th style="text-align:center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tablaDevolucionesProveedorBody">
+                            <tr><td colspan="10" style="text-align:center; padding:30px; color:#999;">Cargando registro de devoluciones a proveedores...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Registrar Devolución a Proveedor -->
+        <div id="modalRegistrarDevolucionProveedor" class="modal-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; display:none; justify-content:center; align-items:center;">
+            <div class="admin-card" style="width:100%; max-width:920px; max-height:90vh; overflow-y:auto; background:var(--bg-card, #fff); padding:26px; border-radius:14px; position:relative; box-shadow:0 10px 40px rgba(0,0,0,0.25);">
+                <button type="button" onclick="cerrarModalRegistrarDevolucionProveedor()" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#888;">&times;</button>
+                <h3 style="margin-top:0; margin-bottom:8px; font-size:1.25rem; display:flex; align-items:center; gap:8px;">↩️ Registrar Devolución a Proveedor</h3>
+                <p style="margin-top:0; margin-bottom:18px; font-size:0.85rem; color:#666;">Selecciona una compra con mercancía pendiente de devolver. El stock se restará al confirmar.</p>
+
+                <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="devolucionProvBuscarCompra" placeholder="🔍 Buscar por #compra, #factura o proveedor..." style="flex:1; padding:11px; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem;">
+                        <button type="button" class="btn-secondary" onclick="buscarComprasDevolubles()" style="padding:11px 16px; border-radius:8px;">Buscar</button>
+                    </div>
+                    <select id="devolucionProvCompraId" onchange="seleccionarCompraDevolucion()" style="width:100%; padding:11px; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem; background:#fff;">
+                        <option value="">-- Selecciona una compra pendiente de devolución --</option>
+                    </select>
+                    <div id="devolucionProvListaCompras" style="display:none; margin-top:6px; max-height:200px; overflow-y:auto; border:1px solid #e2e8f0; border-radius:8px;"></div>
+                </div>
+
+                <div id="devolucionProvDetalleBox" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; padding:14px; border-radius:10px; margin-bottom:16px;">
+                    <div id="devolucionProvCompraResumen" style="font-size:0.85rem; color:#475569; line-height:1.7; margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid #e2e8f0;"></div>
+                    <div class="table-responsive">
+                        <table class="inventory-table" style="font-size:0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Comprado</th>
+                                    <th>Ya Devuelto</th>
+                                    <th>Pendiente</th>
+                                    <th>Precio Unit. (USD)</th>
+                                    <th>Cant. a Devolver</th>
+                                    <th>Subtotal (USD)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="devolucionProvItemsBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="devolucionProvTodoDevuelto" style="display:none; margin-top:10px; padding:10px; background:#fef3c7; border:1px solid #fcd34d; border-radius:8px; font-size:0.82rem; color:#92400e;">Todo lo pendiente ya fue devuelto para esta compra.</div>
+                </div>
+
+                <div id="devolucionProvCamposPago" style="display:none; flex-direction:column; gap:14px;">
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+                        <div>
+                            <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:5px;">Método de Reembolso *</label>
+                            <select id="devolucionProvMetodo" required onchange="actualizarResumenDevolucionProveedor()" style="width:100%; padding:11px; border:1px solid #d1d5db; border-radius:8px; font-size:0.9rem; background:#fff;">
+                                <option value="nota_credito" selected>Nota de Crédito</option>
+                                <option value="efectivo">Efectivo</option>
+                                <option value="pago_movil">Pago Móvil</option>
+                                <option value="transferencia">Transferencia</option>
+                                <option value="otros">Otros</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:5px;">Total a Devolver (USD)</label>
+                            <div id="devolucionProvTotalCalculado" style="width:100%; padding:11px; background:#f3e8ff; border:1px solid #d8b4fe; border-radius:8px; font-size:1rem; font-weight:800; color:#7e22ce;">$0.00</div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:5px;">Motivo de la devolución *</label>
+                        <textarea id="devolucionProvMotivo" required rows="2" placeholder="Ej. producto defectuoso, sobre recepción, acuerdo con proveedor..." style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px; font-size:0.88rem;"></textarea>
+                    </div>
+
+                    <div>
+                        <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:5px;">Notas (Internas)</label>
+                        <textarea id="devolucionProvNotas" rows="2" placeholder="Solo para consulta interna..." style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px; font-size:0.88rem;"></textarea>
+                    </div>
+
+                    <div style="display:flex; justify-content:flex-end;">
+                        <button type="button" id="devolucionProvBtnGuardar" onclick="guardarDevolucionProveedor()" style="padding:11px 22px; background:#8e44ad; color:white; border:none; border-radius:8px; font-weight:700; cursor:pointer;">Confirmar Devolución a Proveedor</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal Anular Devolución a Proveedor -->
+        <div id="modalAnularDevolucionProveedor" class="modal-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:1000; display:none; justify-content:center; align-items:center;">
+            <div class="admin-card" style="width:100%; max-width:520px; background:var(--bg-card, #fff); padding:24px; border-radius:14px; position:relative; box-shadow:0 10px 40px rgba(0,0,0,0.25);">
+                <button type="button" onclick="cerrarModalAnularDevolucionProveedor()" style="position:absolute; top:16px; right:16px; background:none; border:none; font-size:1.5rem; cursor:pointer; color:#888;">&times;</button>
+                <h3 style="margin-top:0; margin-bottom:8px; font-size:1.2rem; color:#b45309;">⚠️ Anular Devolución a Proveedor</h3>
+                <p style="margin-top:0; margin-bottom:14px; font-size:0.85rem; color:#666;">El registro no se borra. Se deshace el ajuste de stock (la mercancía vuelve al inventario).</p>
+                <div id="anularDevolucionProvResumen" style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px 14px; border-radius:8px; font-size:0.85rem; margin-bottom:16px; line-height:1.7;"></div>
+                <form onsubmit="confirmarAnulacionDevolucionProveedor(event)">
+                    <label style="display:block; font-weight:700; font-size:0.85rem; margin-bottom:5px;">Motivo de la anulación *</label>
+                    <textarea id="anularDevolucionProvMotivo" required rows="3" placeholder="Ej. se registró por error, se revirtió el acuerdo..." style="width:100%; padding:10px; border:1px solid #d1d5db; border-radius:8px; font-size:0.88rem; margin-bottom:16px;"></textarea>
+                    <div style="display:flex; justify-content:flex-end; gap:10px;">
+                        <button type="button" class="btn-secondary" onclick="cerrarModalAnularDevolucionProveedor()" style="padding:11px 20px; border-radius:8px;">Cancelar</button>
+                        <button type="submit" class="btn-primary" style="padding:11px 22px; background:#b45309; color:white; border:none; border-radius:8px; font-weight:700; cursor:pointer;">Confirmar Anulación</button>
+                    </div>
+                </form>
+            </div>
+        </div>

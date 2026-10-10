@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Catálogo Digital | Tu Negocio</title>
+    <script>
+        if (localStorage.getItem('theme') === 'dark') {
+            document.documentElement.classList.add('dark-theme');
+        }
+    </script>
+    <link rel="stylesheet" href="assets/css/estilo.css?v=3.9">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+
+<body>
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">
+                <h1 id="brandTitle">🛒 Tecnology</h1>
+            </div>
+            <div class="search-bar">
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="🔍 Buscar productos...">
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <button type="button" class="help-btn-header" onclick="abrirModalAyuda('cliente')" title="Centro de Ayuda / Manual de Usuario">
+                    ❓ Ayuda
+                </button>
+                <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()" style="background:none; border:none; font-size:1.3rem; cursor:pointer; padding:8px; border-radius:12px; transition:var(--transition); line-height: 1;">🌙</button>
+                <div id="user-auth-container" style="display: flex; align-items: center; gap: 10px;"></div>
+                <div class="cart-summary" id="cartSummary" onclick="toggleCartPanel()" style="cursor:pointer;">
+                    🛒 <span id="cartCount">0</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <section class="cart-panel hidden" id="cartPanel">
+        <div class="cart-panel-content">
+            <div class="cart-panel-header">
+                <h2>🛒 Tu carrito</h2>
+                <button class="close-cart" onclick="toggleCartPanel()">✕</button>
+            </div>
+
+            <div id="cartItemsContainer"></div>
+
+            <div class="cart-summary-footer">
+                <div id="cartTotals"></div>
+
+                <button id="btnFinalizarCompra" class="add-to-cart active" onclick="procesarCompra(false)">
+                    ✅ Finalizar compra (100%)
+                </button>
+
+                <button id="btnApartarCompra" class="add-to-cart" style="background:#4338ca; margin-top:8px; width:100%; border:none; color:white; padding:12px; border-radius:8px; font-weight:700; cursor:pointer;" onclick="procesarCompra(true)">
+                    🏷️ Apartar pedido (Inicial desde 30% · 15 días)
+                </button>
+
+                <button class="vaciar-carrito-btn" onclick="vaciarCarrito()">
+                    Vaciar carrito
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <section id="catalogo-panel" class="module-panel">
+        <div class="container">
+            <div class="categories" id="categoriesContainer">
+                <!-- Las categorías se cargarán dinámicamente -->
+            </div>
+
+            <div class="filters-row">
+                <div class="filter-group">
+                    <span class="filter-label">Ordenar por:</span>
+                    <select id="sortSelect" class="filter-select">
+                        <option value="default">Más recientes</option>
+                        <option value="price-asc">Precio: Menor a Mayor</option>
+                        <option value="price-desc">Precio: Mayor a Menor</option>
+                        <option value="name-asc">Nombre: A-Z</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="products-grid" id="productsContainer">
+                <!-- Los productos se cargarán dinámicamente -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de detalles del producto -->
+    <div id="productModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" onclick="cerrarModal()">&times;</span>
+            <div id="productDetails"></div>
+        </div>
+    </div>
+
+    <!-- Modal de Pago (Estilo Cashea/Krece) -->
+    <div id="paymentModal" class="payment-modal hidden">
+        <div class="payment-modal-content">
+            <div class="payment-header">
+                <h2>Elige tu método de pago</h2>
+                <button class="close-payment-btn" onclick="cerrarPaymentModal()">✕</button>
+            </div>
+            <div class="payment-body" id="paymentMethodsContainer">
+                <p class="payment-total">Total a pagar: <strong id="paymentTotalAmount">Bs 0.00</strong></p>
+                <div class="payment-options">
+                    <div class="payment-option-card" onclick="seleccionarMetodoPago('pago_movil')">
+                        <div class="payment-icon">📱</div>
+                        <div class="payment-info">
+                            <h3>Pago Móvil</h3>
+                            <p>Aprobación inmediata</p>
+                        </div>
+                        <div class="payment-arrow">➔</div>
+                    </div>
+                    <div class="payment-option-card" onclick="seleccionarMetodoPago('transferencia')">
+                        <div class="payment-icon">🏦</div>
+                        <div class="payment-info">
+                            <h3>Transferencia</h3>
+                            <p>Verificación regular</p>
+                        </div>
+                        <div class="payment-arrow">➔</div>
+                    </div>
+                    <div class="payment-option-card" onclick="seleccionarMetodoPago('zelle')">
+                        <div class="payment-icon">🌐</div>
+                        <div class="payment-info">
+                            <h3>Zelle</h3>
+                            <p>Envíos desde USA / Divisas</p>
+                        </div>
+                        <div class="payment-arrow">➔</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-body hidden" id="paymentDetailsContainer">
+                <button class="btn-back" onclick="volverMetodosPago()">← Volver</button>
+                <h3 id="selectedPaymentTitle" style="margin-top: 15px; margin-bottom: 10px;">Detalles</h3>
+                <div id="paymentInstructions" class="payment-instructions">
+                    <!-- Instrucciones bancarias generadas por JS -->
+                </div>
+                
+                <form id="paymentForm" onsubmit="enviarComprobantePago(event)" class="payment-form">
+                    <input type="hidden" id="inputMetodoPago" name="metodo_pago" value="">
+                    <div class="form-group">
+                        <label>Banco de Origen</label>
+                        <select id="bancoOrigen" required style="width:100%; padding:12px; margin-bottom:15px; border:1px solid var(--border); border-radius:8px; font-size:1rem; outline:none; background:#fff;">
+                            <option value="">Seleccione Banco...</option>
+                            <option value="0102 - Banco de Venezuela">0102 - Banco de Venezuela</option>
+                            <option value="0104 - Banco Venezolano de Crédito">0104 - Banco Venezolano de Crédito</option>
+                            <option value="0105 - Mercantil">0105 - Mercantil</option>
+                            <option value="0108 - Provincial">0108 - Provincial</option>
+                            <option value="0114 - Bancaribe">0114 - Bancaribe</option>
+                            <option value="0115 - Banco Exterior">0115 - Banco Exterior</option>
+                            <option value="0128 - Banco Caroní">0128 - Banco Caroní</option>
+                            <option value="0134 - Banesco">0134 - Banesco</option>
+                            <option value="0137 - Banco Sofitasa">0137 - Banco Sofitasa</option>
+                            <option value="0138 - Banco Plaza">0138 - Banco Plaza</option>
+                            <option value="0151 - BFC Banco Fondo Común">0151 - BFC Banco Fondo Común</option>
+                            <option value="0156 - 100% Banco">0156 - 100% Banco</option>
+                            <option value="0157 - Bancosur">0157 - Bancosur</option>
+                            <option value="0163 - Banco del Tesoro">0163 - Banco del Tesoro</option>
+                            <option value="0166 - Banco Agrícola">0166 - Banco Agrícola</option>
+                            <option value="0168 - Bancrecer">0168 - Bancrecer</option>
+                            <option value="0169 - Mi Banco">0169 - Mi Banco</option>
+                            <option value="0171 - Banco Activo">0171 - Banco Activo</option>
+                            <option value="0172 - Bancamiga">0172 - Bancamiga</option>
+                            <option value="0174 - Banplus">0174 - Banplus</option>
+                            <option value="0175 - Banco Bicentenario">0175 - Banco Bicentenario</option>
+                            <option value="0177 - Banfanb">0177 - Banfanb</option>
+                            <option value="0191 - BNC">0191 - BNC</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="grupoTelefonoOrigen">
+                        <label>Teléfono de Origen</label>
+                        <div style="display:flex; align-items:center; background:#fff; border:1px solid #ccc; border-radius:4px; overflow:hidden;">
+                            <select id="prefijoTelefonoOrigen" style="border:none; padding:10px; background:transparent; font-size:14px; outline:none; border-right:1px solid #ccc; cursor:pointer;">
+                                <option value="0412">0412</option>
+                                <option value="0422">0422</option>
+                                <option value="0414">0414</option>
+                                <option value="0424">0424</option>
+                                <option value="0416">0416</option>
+                                <option value="0426">0426</option>
+                            </select>
+                            <input type="text" id="telefonoOrigen" style="border:none; flex:1; background:transparent; border-radius:0; padding:10px;" inputmode="numeric" maxlength="7" placeholder="1234567">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Referencia de Pago</label>
+                        <input type="text" id="referenciaPago" required placeholder="Ej: 123456" maxlength="22">
+                        <small style="color: var(--text-light); font-size: 0.78rem; display: block; margin-top: 4px;">Debe tener entre 6 y 22 dígitos</small>
+                    </div>
+                    <button type="submit" class="btn-submit-payment" id="btnSubmitPayment">Enviar información de pago</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación Toast -->
+    <div id="notification-toast"></div>
+
+    <footer class="footer">
+        <p>© 2026 Tecnology</p>
+        <p>Tasa de cambio oficial: 1 USD = <span id="tasaDisplay">0.00</span> Bs</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="assets/js/catalogo.js?v=3.7"></script>
+    <script src="assets/js/carrito.js?v=3.6"></script>
+    <script src="assets/js/validaciones.js?v=1.0"></script>
+    <script src="assets/js/manual.js?v=1.0"></script>
+</body>
+
+</html>
